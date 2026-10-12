@@ -65,8 +65,9 @@ Olist — бразильский маркетплейс: связывает не
 ## Как воспроизвести
 
 ```bash
+cd olist_sql                          # CSV с Kaggle положить в olist_sql/data/
 createdb olist
 psql olist -f sql/01_create_tables.sql
-cd olist_sql && psql olist -f sql/02_load_data.sql   # CSV в olist_sql/data/
+psql olist -f sql/02_load_data.sql
 ```
 Запросы из `03_explore.sql` выполняются по одному в psql или DBeaver.
