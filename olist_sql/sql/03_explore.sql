@@ -905,3 +905,38 @@ ORDER BY freight_share_pct DESC;
 -- Чем дешевле товар, тем большую часть чека съедает доставка: электроника и еда (~57 реалов) — 23%,
 -- компьютеры (1 099 реалов) — 4%. Исключение — мебель: 136–184 реала и всё равно ~20%, потому что она тяжёлая и объёмная.
 -- Порог 100 позиций: без него в топе были категории на 30 позиций, где пара дорогих доставок переворачивает долю.
+
+-- 5.6 (б) Зависимость категории от одного продавца (окно внутри категории, три уровня)
+WITH seller_revenue AS (
+    SELECT COALESCE(p.product_category_name, 'uncategorized') AS category,
+           oi.seller_id AS seller,
+           SUM(oi.price) AS sum_price
+    FROM order_items AS oi
+    JOIN products AS p ON p.product_id = oi.product_id
+    JOIN orders AS o ON o.order_id = oi.order_id
+    WHERE o.order_status = 'delivered'
+    GROUP BY 1, 2
+),
+seller_share AS (
+    SELECT category,
+           seller,
+           sum_price,
+           ROUND(sum_price * 100.0 / SUM(sum_price) OVER (PARTITION BY category), 2) AS pct,
+           ROUND(SUM(sum_price) OVER (PARTITION BY category), 2) AS category_revenue
+    FROM seller_revenue
+)
+SELECT category,
+       category_revenue,
+       COUNT(seller) AS sellers,
+       MAX(pct) AS top_seller_pct
+FROM seller_share
+WHERE category_revenue >= 100000
+GROUP BY category, category_revenue
+ORDER BY top_seller_pct DESC;
+-- Три уровня: продавец в категории → его доля и выручка категории рядом → одна строка на категорию.
+-- В два уровня не укладывается: после GROUP BY category продавцов уже не видно, а окно нельзя поставить в WHERE.
+-- Порог 100 000: в мелких категориях один продавец на 45–50% — норма, а не риск.
+-- Компьютеры: 9 продавцов, крупнейший делает 75% выручки. Офисная мебель: 30 продавцов, крупнейший — 64%.
+-- Риск тут не только в доле, но и в числе продавцов: уйдёт лидер компьютеров — остальные восемь держат четверть категории
+-- и спрос не подхватят. В канцелярии у лидера 35%, но рядом ещё 171 продавец.
+-- В самых больших категориях конкуренция здоровая: красота, спорт, товары для дома — лидер не больше 6,5%.
