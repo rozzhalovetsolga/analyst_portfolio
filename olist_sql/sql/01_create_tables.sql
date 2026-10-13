@@ -1,6 +1,6 @@
 -- Схема базы olist: 9 таблиц маркетплейса Olist (Kaggle).
 -- База создаётся заранее командой: createdb olist
--- Порядок создания: сначала таблицы, на которые ссылаются, потом зависимые.
+-- Порядок создания: сначала таблицы, на которые ссылаются другие, потом зависимые.
 
 CREATE TABLE customers (
     customer_id              uuid PRIMARY KEY,
@@ -32,7 +32,7 @@ CREATE TABLE order_payments (
     FOREIGN KEY (order_id) REFERENCES orders (order_id)
 );
 
--- review_id в данных не уникален: один отзыв привязан к нескольким заказам.
+-- Ожидала, что review_id уникален, но нет: один отзыв привязан к нескольким заказам.
 -- Уникальна пара (order_id, review_id).
 CREATE TABLE order_reviews (
     review_id               uuid,
@@ -52,7 +52,7 @@ CREATE TABLE category_translation (
 );
 
 -- Внешний ключ на category_translation добавляется после загрузки (02_load_data.sql):
--- в исходном справочнике переводов не хватает двух категорий, их дописываем вручную.
+-- в исходном справочнике переводов не хватает двух категорий, их я дописала вручную.
 CREATE TABLE products (
     product_id                 uuid PRIMARY KEY,
     product_category_name      text,
@@ -86,7 +86,7 @@ CREATE TABLE order_items (
     FOREIGN KEY (seller_id)  REFERENCES sellers (seller_id)
 );
 
--- Первичного ключа нет: на один индекс приходится в среднем ~50 точек.
+-- Первичного ключа нет и не нужно: на один почтовый индекс приходится в среднем ~50 точек.
 CREATE TABLE geolocation (
     geolocation_zip_code_prefix text,
     geolocation_lat             real,

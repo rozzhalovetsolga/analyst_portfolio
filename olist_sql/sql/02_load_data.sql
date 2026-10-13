@@ -15,7 +15,7 @@
 \copy geolocation FROM 'data/olist_geolocation_dataset.csv' WITH (FORMAT csv, HEADER true)
 
 -- В справочнике переводов не хватает двух категорий (найдены anti-join, см. 03_explore.sql, 3.2).
--- Дописываем их и возвращаем внешний ключ products → category_translation.
+-- Дописываю их и возвращаю внешний ключ products → category_translation.
 INSERT INTO category_translation (product_category_name, product_category_name_english)
 VALUES ('pc_gamer', 'gaming_pc'),
        ('portateis_cozinha_e_preparadores_de_alimentos', 'portable_kitchen_food_processors');
