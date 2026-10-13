@@ -1,6 +1,6 @@
 # Портфолио аналитика данных
 
-Ольга Розжаловец · Минск · [сайт-портфолио](https://rozzhalovetsolga.github.io/portfolio/) · [резюме PDF](https://rozzhalovetsolga.github.io/portfolio/olga-resume-bigdata.pdf) · [Resume EN](https://rozzhalovetsolga.github.io/portfolio/olga-resume-bigdata-en.pdf) · [Telegram](https://t.me/bolik_olik) · oljadamovna@gmail.com
+Ольга Розжаловец · Минск · [сайт-портфолио](https://rozzhalovetsolga.github.io/portfolio/) · [резюме PDF](https://rozzhalovetsolga.github.io/portfolio/Rozzhalovets_Olga_Data_Analyst.pdf) · [Resume EN](https://rozzhalovetsolga.github.io/portfolio/Rozzhalovets_Olga_Data_Analyst_EN.pdf) · [Telegram](https://t.me/bolik_olik) · oljadamovna@gmail.com
 
 ## О себе
 
