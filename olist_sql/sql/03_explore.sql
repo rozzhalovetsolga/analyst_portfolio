@@ -816,3 +816,29 @@ FROM general_info
 ORDER BY month;
 -- Итого 15 419 773,75. Январь–август: 2017 — 3 472 898, 2018 — 8 451 585 → рост в 2,4 раза.
 -- Полный 2017 против неполного 2018 показал бы лишь +22%: сравнивать одинаковые периоды.
+
+-- 5.5 Рост заказов к прошлому месяцу (LAG)
+WITH monthly AS (
+    SELECT DATE_TRUNC('month', o.order_purchase_timestamp)::date AS month,
+           COUNT(DISTINCT o.order_id) AS orders
+    FROM order_items AS oi
+    JOIN orders AS o ON o.order_id = oi.order_id
+    WHERE o.order_status = 'delivered'
+      AND o.order_purchase_timestamp >= '2017-01-01'
+    GROUP BY 1
+),
+with_prev AS (
+    SELECT month,
+           orders,
+           LAG(orders) OVER (ORDER BY month) AS prev_orders
+    FROM monthly
+)
+SELECT month,
+       orders,
+       prev_orders,
+       ROUND((orders - prev_orders) * 100.0 / prev_orders, 1) AS growth_pct
+FROM with_prev
+ORDER BY month;
+-- 2016 исключён: сентябрь и декабрь — по 1 заказу, ноября нет вовсе (LAG сравнил бы декабрь с октябрём).
+-- Фильтр до окна: в финальном WHERE январь 2017 сравнился бы с декабрём 2016 (+74 900%).
+-- Сильнейший рост — ноябрь 2017, +62,8% (Black Friday), затем декабрь −24,4%; в 2018 заказы на плато ~6–7 тыс./мес.
