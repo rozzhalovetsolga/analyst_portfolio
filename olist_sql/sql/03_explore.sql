@@ -859,3 +859,49 @@ ORDER BY month;
 -- Фильтр ставлю до окна: в финальном WHERE январь 2017 всё равно сравнился бы с декабрём 2016 (+74 900%).
 -- Самый сильный рост — ноябрь 2017, +62,8% (Black Friday), потом декабрь −24,4%.
 -- В 2018 заказы стоят на плато 6–7 тыс. в месяц: рост год к году из 5.4 набран ещё в 2017-м.
+
+-- 5.6 (а) Доля категории в выручке (окно на все строки)
+WITH category_revenue AS (
+    SELECT COALESCE(p.product_category_name, 'без категории') AS category,
+           SUM(oi.price + oi.freight_value) AS gmv
+    FROM order_items AS oi
+    JOIN products AS p ON p.product_id = oi.product_id
+    JOIN orders AS o ON o.order_id = oi.order_id
+    WHERE o.order_status = 'delivered'
+    GROUP BY 1
+)
+SELECT category,
+       gmv,
+       ROUND(gmv * 100.0 / SUM(gmv) OVER (), 2) AS share_pct
+FROM category_revenue
+ORDER BY share_pct DESC;
+-- Топ-3 категории дают 25,3% оборота, топ-5 — 39,3%, а всего категорий 73. Перекоса нет:
+-- маркетплейс не зависит от пары категорий, зато держит длинный хвост из десятков мелких.
+-- Товары без категории — 1,3%: больше, чем у пятидесяти настоящих категорий. Стоит заполнить справочник.
+-- Часы и постельное бельё дают одинаковую долю, но часы стоят вдвое дороже: бизнес чека против бизнеса объёма.
+
+-- 5.6 (а+) Сколько чека съедает доставка (доля внутри строки, окно не нужно)
+WITH category_costs AS (
+    SELECT p.product_category_name AS category,
+           COUNT(*) AS items,
+           ROUND(AVG(oi.price), 2) AS avg_price,
+           SUM(oi.price) AS goods,
+           SUM(oi.freight_value) AS freight
+    FROM order_items AS oi
+    JOIN products AS p ON p.product_id = oi.product_id
+    JOIN orders AS o ON o.order_id = oi.order_id
+    WHERE o.order_status = 'delivered'
+    GROUP BY 1
+    HAVING COUNT(*) >= 100
+)
+SELECT category,
+       items,
+       avg_price,
+       ROUND(freight * 100.0 / (freight + goods), 2) AS freight_share_pct
+FROM category_costs
+ORDER BY freight_share_pct DESC;
+-- Сначала разделила доставку категории на доставку всей площадки — получился просто рейтинг объёма.
+-- Знаменатель задаёт вопрос: здесь он — чек этой же категории.
+-- Чем дешевле товар, тем большую часть чека съедает доставка: электроника и еда (~57 реалов) — 23%,
+-- компьютеры (1 099 реалов) — 4%. Исключение — мебель: 136–184 реала и всё равно ~20%, потому что она тяжёлая и объёмная.
+-- Порог 100 позиций: без него в топе были категории на 30 позиций, где пара дорогих доставок переворачивает долю.
